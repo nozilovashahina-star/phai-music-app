@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="description" content="Phai Music — Your offline music player. Play, organize, and enjoy your local music collection." />
+  <meta name="theme-color" content="#0d0d0e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Phai Music</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ================================================
+       SPLASH SCREEN
+       Shows briefly on first load, then fades out.
+  ================================================ -->
+  <div id="splash-screen" class="splash-screen" aria-hidden="true">
+    <div class="splash-content">
+      <div class="splash-icon-wrap">
+        <svg class="splash-music-icon" viewBox="0 0 80 80" fill="none">
+          <circle cx="40" cy="40" r="40" fill="url(#splashGrad)"/>
+          <path d="M52 28v20a8 8 0 1 1-4-6.93V32l-16 3v18a8 8 0 1 1-4-6.93V27l24-5v6z"
+                fill="white" fill-opacity="0.9"/>
+          <defs>
+            <linearGradient id="splashGrad" x1="0" y1="0" x2="80" y2="80">
+              <stop offset="0%" stop-color="#c4a8f7"/>
+              <stop offset="100%" stop-color="#7eb8f7"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <h1 class="splash-title">Phai Music</h1>
+      <p class="splash-sub">Your music, offline &amp; beautiful</p>
+    </div>
+  </div>
+
+  <!-- ================================================
+       MAIN APP  (hidden until splash fades)
+  ================================================ -->
+  <div id="main-app" class="main-app hidden">
+
+    <!-- ---- APP HEADER ---- -->
+    <header class="app-header" id="app-header">
+      <div class="header-left">
+        <span class="header-greeting" id="header-greeting">Good evening</span>
+        <h1 class="header-brand" id="header-title">Phai Music</h1>
+        <img src="assets/themes/phain hai.png" id="header-custom-logo" class="header-custom-logo hidden" alt="Phai Music" />
+      </div>
+      <div class="header-right">
+        <!-- Theme button -->
+        <button class="icon-btn" id="theme-btn" aria-label="Change theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.6-.7 1.6-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6h2c3 0 5.6-2.5 5.6-5.6C22 6.5 17.5 2 12 2z"/>
+            <circle cx="7.5" cy="11.5" r="1.5" fill="currentColor"/>
+            <circle cx="12" cy="7.5" r="1.5" fill="currentColor"/>
+            <circle cx="16.5" cy="11.5" r="1.5" fill="currentColor"/>
+          </svg>
+        </button>
+        <!-- Add music button -->
+        <button class="icon-btn" id="add-music-btn" aria-label="Add music files">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ---- TAB NAVIGATION (Home / Library / Albums / Liked) ---- -->
+    <nav class="app-tabs" id="app-tabs" aria-label="Main navigation">
+      <button class="tab-btn active" data-view="home" id="tab-home">Home</button>
+      <button class="tab-btn" data-view="library" id="tab-library">Library</button>
+      <button class="tab-btn" data-view="albums" id="tab-albums">Albums</button>
+      <button class="tab-btn" data-view="favorites" id="tab-favorites">Liked</button>
+    </nav>
+
+    <!-- ---- HIDDEN FILE INPUT ---- -->
+    <!-- Accepts common audio formats -->
+    <input
+      type="file"
+      id="file-input"
+      accept="audio/*,.mp3,.flac,.wav,.ogg,.m4a,.aac"
+      multiple
+      hidden
+      aria-hidden="true"
+    />
+
+    <!-- ================================================
+         VIEWS  (only one is visible at a time)
+    ================================================ -->
+
+    <!-- HOME VIEW -->
+    <div id="view-home" class="view active" role="main" aria-label="Home">
+
+      <!-- Recently Played -->
+      <section class="section" id="recently-section" aria-labelledby="recently-title">
+        <div class="section-header">
+          <h2 class="section-title" id="recently-title">Recently Played</h2>
+        </div>
+        <!-- Horizontal scroll row — filled by library.js -->
+        <div class="h-scroll" id="recently-played-list" role="list" aria-label="Recently played songs">
+          <div class="empty-h">
+            <span class="empty-h-icon">🎵</span>
+            <p>No recently played</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Featured / All Songs -->
+      <section class="section" id="featured-section" aria-labelledby="featured-title">
+        <div class="section-header">
+          <h2 class="section-title" id="featured-title">Featured</h2>
+        </div>
+
+        <!-- Song list — filled by app.js -->
+        <div class="song-list" id="featured-list" role="list" aria-label="Featured songs">
+          <!-- Empty CTA shown before any songs are added -->
+          <div class="empty-state" id="featured-empty">
+            <div class="empty-emoji">🎧</div>
+            <h3>No music yet</h3>
+            <p>Tap the + button above to add your music files</p>
+            <button class="btn-primary" id="add-music-cta">Add Music Files</button>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /view-home -->
+
+    <!-- LIBRARY VIEW -->
+    <div id="view-library" class="view" role="main" aria-label="Library">
+      <!-- Search bar -->
+      <div class="search-wrap">
+        <div class="search-bar">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            type="search"
+            id="library-search"
+            class="search-input"
+            placeholder="Search songs, artists…"
+            autocomplete="off"
+            aria-label="Search library"
+          />
+        </div>
+      </div>
+
+      <div class="song-count-label" id="song-count" aria-live="polite">0 songs</div>
+
+      <div class="song-list" id="library-list" role="list" aria-label="All songs">
+        <div class="empty-state">
+          <div class="empty-emoji">📂</div>
+          <h3>Library is empty</h3>
+          <p>Tap + to import your audio files</p>
+        </div>
+      </div>
+    </div><!-- /view-library -->
+
+    <!-- ALBUMS VIEW -->
+    <div id="view-albums" class="view" role="main" aria-label="Albums">
+      <!-- Empty state: "Yangi album yaratish" box -->
+      <div id="albums-empty-box" class="albums-create-box" role="button" tabindex="0">
+        <div class="acb-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </div>
+        <h3 class="acb-title">Yangi album yaratish</h3>
+        <p class="acb-desc">Musiqalaringizdan iborat to'plam yarating (max 50 ta)</p>
+      </div>
+
+      <!-- Main Albums Container (when albums exist) -->
+      <div id="albums-content" class="albums-content hidden">
+        <!-- Horizontal Showcase of Album cards -->
+        <div class="albums-showcase-wrap">
+          <div class="albums-carousel" id="albums-carousel" role="list" aria-label="Album collections">
+            <!-- Rendered by ui.js -->
+          </div>
+        </div>
+
+        <!-- Selected Album Details: Header + Songs List -->
+        <div class="album-selected-section" id="album-selected-section">
+          <div class="album-details-header">
+            <div class="adh-info">
+              <h3 class="adh-title" id="adh-title">Album Name</h3>
+              <p class="adh-sub" id="adh-sub">0 songs</p>
+            </div>
+            <div class="adh-actions">
+              <button class="adh-btn" id="album-play-all-btn" aria-label="Play all songs">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+                <span>Play All</span>
+              </button>
+              <button class="adh-btn adh-btn-delete" id="album-delete-btn" aria-label="Delete album">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Songs in this album -->
+          <div class="song-list" id="album-songs-list" role="list" aria-label="Songs in this album">
+            <!-- Rendered by ui.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating + button at bottom of albums view -->
+      <button class="fab-create-album" id="fab-create-album" aria-label="Create new album">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+      </button>
+    </div><!-- /view-albums -->
+
+    <!-- FAVORITES VIEW -->
+    <div id="view-favorites" class="view" role="main" aria-label="Liked songs">
+      <div class="view-top-pad">
+        <h2 class="view-heading">Liked Songs</h2>
+      </div>
+      <div class="song-list" id="favorites-list" role="list" aria-label="Liked songs">
+        <div class="empty-state">
+          <div class="empty-emoji">❤️</div>
+          <h3>No liked songs</h3>
+          <p>Tap ❤️ on any track to save it here</p>
+        </div>
+      </div>
+    </div><!-- /view-favorites -->
+
+  </div><!-- /main-app -->
+
+  <!-- ================================================
+       MINI PLAYER BAR  (pill-shaped, always at bottom)
+       Visible whenever a song is loaded.
+       Left:   Shuffle button (circle)
+       Center: [album art] [prev][play/pause][next] [song title]
+       Right:  Heart/Favorite button (circle)
+  ================================================ -->
+  <div class="mini-player" id="mini-player" role="region" aria-label="Now playing">
+
+    <!-- Shuffle (left pill circle) -->
+    <button class="mpill-side-btn" id="mini-shuffle-btn" aria-label="Toggle shuffle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <polyline points="16 3 21 3 21 8"/>
+        <line x1="4" y1="20" x2="21" y2="3"/>
+        <polyline points="21 16 21 21 16 21"/>
+        <line x1="15" y1="15" x2="21" y2="21"/>
+      </svg>
+    </button>
+
+    <!-- Center — tapping this opens full player -->
+    <div class="mpill-center" id="mini-player-center" role="button" tabindex="0" aria-label="Open full player">
+
+      <!-- Album art circle -->
+      <div class="mpill-art" id="mini-album-art">
+        <img src="" alt="" id="mini-album-img" class="mpill-art-img" />
+        <div class="mpill-art-placeholder" id="mini-art-placeholder" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M9 18V5l12-2v13"/>
+            <circle cx="6" cy="18" r="3"/>
+            <circle cx="18" cy="16" r="3"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Song info + controls -->
+      <div class="mpill-info">
+        <p class="mpill-title" id="mini-song-title" aria-live="polite">No song playing</p>
+        <div class="mpill-btns">
+          <!-- Prev -->
+          <button class="mpill-ctrl" id="mini-prev-btn" aria-label="Previous track">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 20L9 12l10-8v16zM5 4h2v16H5z"/>
+            </svg>
+          </button>
+          <!-- Play / Pause -->
+          <button class="mpill-ctrl mpill-play" id="mini-play-btn" aria-label="Play or pause">
+            <svg viewBox="0 0 24 24" fill="currentColor" id="mini-play-icon">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" id="mini-pause-icon" class="hidden">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+            </svg>
+          </button>
+          <!-- Next -->
+          <button class="mpill-ctrl" id="mini-next-btn" aria-label="Next track">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M5 4l10 8-10 8V4zm14 0h-2v16h2V4z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /mpill-center -->
+
+    <!-- Favorite (right pill circle) -->
+    <button class="mpill-side-btn" id="mini-fav-btn" aria-label="Toggle favorite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="mini-heart-icon">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+    </button>
+
+  </div><!-- /mini-player -->
+
+  <!-- ================================================
+       FULL PLAYER OVERLAY  (slides up from bottom)
+       Opens when user taps the mini player center.
+  ================================================ -->
+  <div id="player-overlay" class="player-overlay" role="dialog" aria-label="Full player" aria-modal="true">
+
+    <!-- Blurred color gradient from album art -->
+    <div class="po-bg-gradient" id="player-bg" aria-hidden="true"></div>
+
+    <!-- --- Top bar: close arrow on left, pill menu on right --- -->
+    <div class="po-header">
+      <button class="po-header-btn" id="player-close-btn" aria-label="Close player">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      <button class="po-menu-pill" id="player-more-btn" aria-label="More options" aria-haspopup="true">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="5" r="1.6"/>
+          <circle cx="12" cy="12" r="1.6"/>
+          <circle cx="12" cy="19" r="1.6"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- --- Now Playing Title Heading --- -->
+    <div class="po-title-heading-wrap">
+      <h1 class="po-title-heading">Now playing</h1>
+    </div>
+
+    <!-- --- Showcase section: Current Cover (left) + Next section (right) --- -->
+    <div class="po-showcase">
+      <!-- Left: Large square album cover -->
+      <div class="po-current-art-wrap">
+        <div class="po-art-glow" id="po-art-glow" aria-hidden="true"></div>
+        <div class="po-art-frame" id="player-art-frame">
+          <img src="" alt="Album cover" id="player-album-art" class="po-art-img" />
+          <div class="po-art-placeholder" id="player-art-placeholder" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Next track preview -->
+      <div class="po-next-section" id="player-next-section">
+        <span class="po-next-label">Next</span>
+        <span class="po-next-title" id="player-next-title">No upcoming song</span>
+        <div class="po-next-art" id="player-next-art" role="button" tabindex="0" aria-label="Play next song">
+          <img src="" alt="Next album cover" id="player-next-art-img" class="po-next-img hidden" />
+          <div class="po-next-placeholder" id="player-next-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+              <path d="M9 18V5l12-2v13"/>
+              <circle cx="6" cy="18" r="3"/>
+              <circle cx="18" cy="16" r="3"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- --- Song title + artist  |  shuffle + heart (blush circles) --- -->
+    <div class="po-info">
+      <div class="po-info-row">
+        <div class="po-info-text">
+          <h2 class="po-title" id="player-song-title">Song Title</h2>
+          <p class="po-artist" id="player-song-artist">Artist</p>
+        </div>
+        <!-- Blush-pink action circles on the right of the title -->
+        <div class="po-info-btns">
+          <!-- Shuffle -->
+          <button class="po-pink-circle" id="player-shuffle-btn" aria-label="Toggle shuffle" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <polyline points="16 3 21 3 21 8"/>
+              <line x1="4" y1="20" x2="21" y2="3"/>
+              <polyline points="21 16 21 21 16 21"/>
+              <line x1="15" y1="15" x2="21" y2="21"/>
+            </svg>
+          </button>
+          <!-- Heart / Favorite -->
+          <button class="po-pink-circle po-fav-btn" id="player-fav-btn" aria-label="Toggle favorite">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" id="player-heart-icon">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- --- Progress / seek bar (taller track + elongated marker) --- -->
+    <div class="po-progress-zone">
+      <div class="po-progress-track" id="progress-bar-container" role="slider"
+           aria-label="Song progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="po-progress-rail">
+          <div class="po-progress-fill" id="progress-fill"></div>
+        </div>
+        <div class="po-progress-thumb" id="progress-thumb"></div>
+      </div>
+      <div class="po-times">
+        <span id="current-time" aria-label="Current time">0:00</span>
+        <span id="total-time" aria-label="Total duration">0:00</span>
+      </div>
+    </div>
+
+    <!-- --- Playback controls: 3 blush-pink pill buttons --- -->
+    <div class="po-controls">
+      <!-- Previous -->
+      <button class="po-pill" id="player-prev-btn" aria-label="Previous track">
+        <svg viewBox="0 0 24 24" fill="currentColor" id="player-prev-icon">
+          <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+        </svg>
+        <img src="assets/themes/phai world.png" id="player-custom-prev-img" class="btn-custom-img hidden" alt="Previous" />
+      </button>
+      <!-- Play / Pause (center, slightly larger pill) -->
+      <button class="po-pill po-pill-main" id="player-play-btn" aria-label="Play or pause">
+        <svg viewBox="0 0 24 24" fill="currentColor" id="player-play-icon">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" id="player-pause-icon" class="hidden">
+          <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+        </svg>
+        <img src="assets/themes/phai dot.png" id="player-custom-play-img" class="btn-custom-img hidden" alt="Play" />
+        <img src="assets/themes/phai u.png" id="player-custom-pause-img" class="btn-custom-img hidden" alt="Pause" />
+      </button>
+      <!-- Next -->
+      <button class="po-pill" id="player-next-btn" aria-label="Next track">
+        <svg viewBox="0 0 24 24" fill="currentColor" id="player-next-icon">
+          <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+        </svg>
+        <img src="assets/themes/phai sun.png" id="player-custom-next-img" class="btn-custom-img hidden" alt="Next" />
+      </button>
+      <!-- Repeat: hidden visually but kept for JS -->
+      <button id="player-repeat-btn" aria-label="Toggle repeat" aria-pressed="false" class="hidden"></button>
+    </div>
+
+    <!-- --- Volume slider (lowered) --- -->
+    <div class="po-volume">
+      <!-- Low volume icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vol-icon" aria-hidden="true">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      </svg>
+      <input
+        type="range"
+        id="volume-slider"
+        class="vol-slider"
+        min="0" max="100" value="80"
+        aria-label="Volume"
+      />
+      <!-- High volume icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="vol-icon" aria-hidden="true">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </svg>
+    </div>
+
+  </div><!-- /player-overlay -->
+
+  <!-- ================================================
+       SETTINGS & EDIT MODAL
+       Change theme, song title, artist, and cover art.
+  ================================================ -->
+  <div id="edit-modal" class="modal-overlay hidden" role="dialog" aria-label="Settings and Edit info" aria-modal="true">
+    <div class="modal-sheet">
+
+      <!-- Drag handle -->
+      <div class="modal-handle" aria-hidden="true"></div>
+
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Song Info</h3>
+        <button class="modal-x-btn" id="modal-close-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Album cover picker -->
+        <div class="modal-cover-row">
+          <div class="cover-picker" id="cover-picker-btn" role="button" tabindex="0" aria-label="Change album cover">
+            <img src="" alt="Cover preview" id="cover-preview-img" class="cover-picker-img hidden" />
+            <div class="cover-picker-placeholder" id="cover-picker-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span>Change Cover</span>
+            </div>
+          </div>
+          <div class="cover-picker-hint">
+            <p>Tap to upload<br/>a new cover image</p>
+            <p class="cover-picker-hint-sub">Changes saved in app only.<br/>Original file is not modified.</p>
+          </div>
+        </div>
+        <input type="file" id="cover-file-input" accept="image/*" hidden aria-hidden="true" />
+
+        <!-- Title field -->
+        <div class="form-group">
+          <label class="form-label" for="edit-title-input">Song Title</label>
+          <input type="text" id="edit-title-input" class="form-input" placeholder="Enter song title…" autocomplete="off" />
+        </div>
+
+        <!-- Artist field -->
+        <div class="form-group">
+          <label class="form-label" for="edit-artist-input">Artist</label>
+          <input type="text" id="edit-artist-input" class="form-input" placeholder="Enter artist name…" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-danger" id="modal-delete-song-btn" type="button" aria-label="Delete song from storage">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;margin-right:5px;vertical-align:middle;">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          <span>Delete</span>
+        </button>
+        <button class="btn-ghost" id="modal-cancel-btn" type="button">Cancel</button>
+        <button class="btn-primary" id="modal-save-btn" type="button">Save</button>
+      </div>
+
+    </div>
+  </div><!-- /edit-modal -->
+
+  <!-- ================================================
+       THEME SELECTION MODAL
+       Opened exclusively from Main Page header palette button.
+  ================================================ -->
+  <div id="theme-modal" class="modal-overlay hidden" role="dialog" aria-label="Change theme" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-handle" aria-hidden="true"></div>
+
+      <div class="modal-header">
+        <h3 class="modal-title">Theme Color</h3>
+        <button class="modal-x-btn" id="theme-modal-close-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="theme-picker-grid" id="theme-picker">
+          <button class="theme-chip active" data-theme="content">
+            <span class="theme-dot theme-dot-content"></span>
+            <span>Content Based</span>
+          </button>
+          <button class="theme-chip" data-theme="dark">
+            <span class="theme-dot theme-dot-dark"></span>
+            <span>Dark</span>
+          </button>
+          <button class="theme-chip" data-theme="blue">
+            <span class="theme-dot theme-dot-blue"></span>
+            <span>Light Blue</span>
+          </button>
+          <button class="theme-chip" data-theme="peach">
+            <span class="theme-dot theme-dot-peach"></span>
+            <span>Peach Pink</span>
+          </button>
+          <button class="theme-chip" data-theme="green">
+            <span class="theme-dot theme-dot-green"></span>
+            <span>Light Green</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div><!-- /theme-modal -->
+
+  <!-- ================================================
+       ALBUM CREATION & EDIT MODAL
+       Create custom album with cover and up to 50 songs.
+  ================================================ -->
+  <div id="album-modal" class="modal-overlay hidden" role="dialog" aria-label="Create album" aria-modal="true">
+    <div class="modal-sheet modal-sheet-tall">
+      <div class="modal-handle" aria-hidden="true"></div>
+
+      <div class="modal-header">
+        <h3 class="modal-title" id="album-modal-title">Yangi album yaratish</h3>
+        <button class="modal-x-btn" id="album-modal-close-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Cover & Name Row -->
+        <div class="modal-cover-row">
+          <div class="cover-picker" id="album-cover-picker-btn" role="button" tabindex="0" aria-label="Album cover">
+            <img src="" alt="Cover preview" id="album-cover-preview-img" class="cover-picker-img hidden" />
+            <div class="cover-picker-placeholder" id="album-cover-picker-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="3"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span>Add Cover</span>
+            </div>
+          </div>
+          <input type="file" id="album-cover-file-input" accept="image/*" hidden aria-hidden="true" />
+
+          <div class="form-group flex-1">
+            <label class="form-label" for="album-name-input">Album Nomi</label>
+            <input type="text" id="album-name-input" class="form-input" placeholder="Album nomi..." autocomplete="off" />
+            <p class="cover-picker-hint-sub" style="margin-top:6px;">Maksimal 50 ta musiqa tanlang</p>
+          </div>
+        </div>
+
+        <!-- Song Selection Header -->
+        <div class="album-select-header">
+          <span class="form-label" id="album-select-count">Tanlangan: 0 / 50</span>
+          <div class="album-select-actions">
+            <button class="link-btn" id="album-select-all-btn" type="button">Barchasi</button>
+            <button class="link-btn" id="album-deselect-all-btn" type="button">Tozalash</button>
+          </div>
+        </div>
+
+        <!-- Song Picker Checklist -->
+        <div class="album-song-picker-list" id="album-song-picker-list" role="group" aria-label="Musiqalar ro'yxati">
+          <!-- Rendered by ui.js -->
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost" id="album-modal-cancel-btn">Bekor qilish</button>
+        <button class="btn-primary" id="album-modal-save-btn">Albomni saqlash</button>
+      </div>
+    </div>
+  </div><!-- /album-modal -->
+
+  <!-- ================================================
+       IN-APP CONFIRMATION MODAL (Mobile Native)
+       Replaces browser confirm() with sleek custom UI
+  ================================================ -->
+  <div id="confirm-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-sheet confirm-sheet">
+      <div class="confirm-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </div>
+      <h3 class="confirm-title" id="confirm-title">Delete Track</h3>
+      <p class="confirm-message" id="confirm-message">Are you sure you want to delete this track from storage?</p>
+      <div class="confirm-footer">
+        <button class="btn-ghost" id="confirm-cancel-btn" type="button">Cancel</button>
+        <button class="btn-danger-solid" id="confirm-ok-btn" type="button">Delete</button>
+      </div>
+    </div>
+  </div><!-- /confirm-modal -->
+
+  <!-- ================================================
+       HIDDEN HTML5 AUDIO ELEMENT
+       Controlled entirely by player.js
+  ================================================ -->
+  <audio id="audio-player" preload="metadata" aria-hidden="true"></audio>
+
+  <!-- ================================================
+       TOAST NOTIFICATION CONTAINER
+       Transient messages appear here (top of screen).
+  ================================================ -->
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+</div><!-- /app -->
+
+<!-- Scripts — order matters: library → ui → player → app -->
+<script src="js/library.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/player.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

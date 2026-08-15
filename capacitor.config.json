@@ -1,0 +1,9 @@
+{
+  "appId": "com.phaimusic.app",
+  "appName": "Phai Music",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": true
+  }
+}

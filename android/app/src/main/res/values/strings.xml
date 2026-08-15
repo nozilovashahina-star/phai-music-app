@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Phai Music</string>
+    <string name="title_activity_main">Phai Music</string>
+    <string name="package_name">com.phaimusic.app</string>
+    <string name="custom_url_scheme">com.phaimusic.app</string>
+</resources>
