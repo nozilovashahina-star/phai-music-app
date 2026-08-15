@@ -1,0 +1,46 @@
+name: Build Android APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodni yuklab olish
+        uses: actions/checkout@v4
+
+      - name: Node.js o'rnatish
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Java 17 o'rnatish
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Kutubxonalarni o'rnatish
+        run: npm install
+
+      - name: Capacitor sinxronlash
+        run: npx cap sync android
+
+      - name: Gradle fayliga ruxsat berish
+        run: chmod +x android/gradlew
+
+      - name: APK Build qilish
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: APK faylni saqlash
+        uses: actions/upload-artifact@v4
+        with:
+          name: Phai-Music-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
